@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Checker</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f0f2f5;
+      }
+      .container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        text-align: center;
+      }
+      h1 {
+        margin-bottom: 30px;
+        color: #333;
+      }
+      .search-box {
+        display: flex;
+        margin-bottom: 20px;
+      }
+      input {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px 0 0 4px;
+        font-size: 16px;
+        outline: none;
+      }
+      button {
+        padding: 12px 20px;
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #3367d6;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        font-size: 18px;
+        font-weight: bold;
+        display: none;
+      }
+      .confirmed {
+        background-color: #e6f4ea;
+        color: #137333;
+      }
+      .not-found {
+        background-color: #fce8e6;
+        color: #c5221f;
+      }
+      .loading {
+        display: none;
+        margin-top: 20px;
+        justify-content: center;
+        align-items: center;
+      }
+      .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(0, 0, 0, 0.1);
+        border-top-color: #4285f4;
+        border-radius: 50%;
+        animation: spin 1s ease infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      footer {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Wallet Checker</h1>
+      <div class="search-box">
+        <input type="text" id="wallet-input" placeholder="Enter wallet address...">
+        <button id="check-button" onclick="checkWallet()">Check</button>
+      </div>
+      <div class="result" id="result">
+        <!-- Result will appear here -->
+      </div>
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+      </div>
+      <footer>
+        Powered by Google Apps Script
+      </footer>
+    </div>
+
+    <script>
+      // Function to check if a wallet exists
+      function checkWallet() {
+        const walletInput = document.getElementById('wallet-input');
+        const resultDiv = document.getElementById('result');
+        const loadingDiv = document.getElementById('loading');
+        
+        const walletAddress = walletInput.value.trim();
+        
+        if (!walletAddress) {
+          showResult('Please enter a wallet address', 'not-found');
+          return;
+        }
+        
+        // Show loading spinner
+        loadingDiv.style.display = 'flex';
+        resultDiv.style.display = 'none';
+        
+        // Call the server-side function
+        google.script.run
+          .withSuccessHandler(function(result) {
+            // Hide loading spinner
+            loadingDiv.style.display = 'none';
+            
+            // Show appropriate result
+            if (result.found) {
+              showResult('Wallet Confirmed', 'confirmed');
+            } else {
+              showResult('Wallet Not Found', 'not-found');
+            }
+          })
+          .withFailureHandler(function(error) {
+            // Hide loading spinner
+            loadingDiv.style.display = 'none';
+            
+            // Show error message
+            showResult('Error: ' + error.message, 'not-found');
+          })
+          .searchWallet(walletAddress);
+      }
+      
+      // Function to show result
+      function showResult(message, className) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.textContent = message;
+        resultDiv.className = 'result ' + className;
+        resultDiv.style.display = 'block';
+      }
+      
+      // Allow Enter key to trigger the search
+      document.getElementById('wallet-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          checkWallet();
+        }
+      });
+    </script>
+  </body>
+</html>
